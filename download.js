@@ -1,16 +1,46 @@
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const Multiprogress = require("multi-progress");
-
 const progressBars = new Multiprogress(process.stderr);
+
+const MAX_PARALLEL_DOWNLOADS = 5;
+const START_INDEX = +process.argv[2] - 1;
+const END_INDEX = +process.argv[3];
+
+console.log(START_INDEX, END_INDEX);
+if (
+  isNaN(START_INDEX) ||
+  isNaN(END_INDEX) ||
+  START_INDEX < 0 ||
+  END_INDEX < START_INDEX ||
+  END_INDEX <= 0
+) {
+  throw new Error("Please specify both start and end index");
+}
 
 (async () => {
   const links = fs
     .readFileSync("download-links.txt", "utf-8")
     .split("\n")
-    .filter(Boolean);
+    .filter(Boolean)
+    .reverse();
 
-  await Promise.all(links.map(link => download(link)));
+  if (links.length === 0) {
+    throw new Error("0 episodes to download");
+  }
+
+  const linkstoDownload = links.slice(START_INDEX, END_INDEX);
+  console.log("Total links to be downloaded", linkstoDownload.length);
+
+  while (linkstoDownload.length > 0) {
+    await Promise.all(
+      linkstoDownload
+        .splice(0, MAX_PARALLEL_DOWNLOADS)
+        .map(link => download(link))
+    );
+
+    console.log(linkstoDownload.length, "downloads left");
+  }
 })();
 
 async function download(link) {
@@ -35,7 +65,7 @@ async function download(link) {
       })
       .outputOptions("-c copy")
       .outputOptions("-bsf:a aac_adtstoasc")
-      .output(fileName)
+      .output(`reward/${fileName}`)
       .run();
   });
 }
