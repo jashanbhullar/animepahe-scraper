@@ -7,7 +7,6 @@ const MAX_PARALLEL_DOWNLOADS = 5;
 const START_INDEX = +process.argv[2] - 1;
 const END_INDEX = +process.argv[3];
 
-console.log(START_INDEX, END_INDEX);
 if (
   isNaN(START_INDEX) ||
   isNaN(END_INDEX) ||
@@ -45,7 +44,6 @@ if (
 
 async function download(link) {
   const fileName = link.split("/").reverse()[1];
-  console.log("Downloading ", fileName);
   await new Promise((resolve, reject) => {
     const bar = progressBars.newBar(`${fileName} [:bar]  :percent :etas`, {
       complete: "=",
