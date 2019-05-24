@@ -21,8 +21,7 @@ if (
   const links = fs
     .readFileSync("download-links.txt", "utf-8")
     .split("\n")
-    .filter(Boolean)
-    .reverse();
+    .filter(Boolean);
 
   if (links.length === 0) {
     throw new Error("0 episodes to download");
