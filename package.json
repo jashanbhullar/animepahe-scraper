@@ -1,14 +1,11 @@
 {
-  "name": "jojo-scrper",
+  "name": "animepahe-scraper",
   "version": "1.0.0",
-  "description": "",
+  "description": "this small node project can be used to download anime from animepahe",
   "main": "index.js",
   "dependencies": {
-    "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
-    "m3u8-to-mp4": "^1.0.0",
     "multi-progress": "^2.0.0",
-    "progress": "^2.0.3",
     "puppeteer": "^1.15.0"
   },
   "devDependencies": {},
