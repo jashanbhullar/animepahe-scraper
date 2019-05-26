@@ -50,6 +50,7 @@ const apiURL = page =>
     const { last_page, urls } = await getUrls(apiURL(currentPage));
     lastPage = last_page;
     currentPage++;
+    console.log(`${urls.length} urls fetched`);
     episodePageURLs.push(...urls);
   } while (currentPage <= lastPage);
 
@@ -58,4 +59,5 @@ const apiURL = page =>
     stream.write(url + "\n");
   }
   stream.end();
+  console.log(`Total ${episodePageURLs.length} fetched and written to file`);
 })();
