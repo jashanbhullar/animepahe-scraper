@@ -1,11 +1,14 @@
 const https = require("https");
 const fs = require("fs");
 
-const M = process.argv[2];
-const ANIME_ID = process.argv[3];
+// const M = process.argv[2];
+const ANIME_ID = process.argv[2];
+const ASC_SORT = process.argv[3] === "true" ? "episode_asc" : "episode_desc";
+const PAGE_START = +process.argv[4] || 1;
+const PAGE_END = +process.argv[5] || null;
 
 // Throw error if the required parameters are missing
-if (!M || !ANIME_ID) {
+if (!ASC_SORT || !ANIME_ID) {
   throw new Error("Please provide release status and anime id");
 }
 
@@ -38,17 +41,17 @@ const getUrls = url => {
 
 // keep creating the next page of urls
 const apiURL = page =>
-  `https://animepahe.com/api?m=${M}&id=${ANIME_ID}&page=${page}`;
+  `https://animepahe.com/api?m=release&id=${ANIME_ID}&sort=${ASC_SORT}&page=${page}`;
 
 // The actual function
 // Made IIFE so that can be run as async
 (async () => {
-  let currentPage = 1;
-  let lastPage = 0;
+  let currentPage = PAGE_START;
+  let lastPage;
   const episodePageURLs = [];
   do {
     const { last_page, urls } = await getUrls(apiURL(currentPage));
-    lastPage = last_page;
+    lastPage = PAGE_END ? PAGE_END : last_page;
     currentPage++;
     console.log(`${urls.length} urls fetched`);
     episodePageURLs.push(...urls);

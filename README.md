@@ -10,7 +10,7 @@ Get the anime id of the anime you want to download.
 This will download all the episode links to the episodes.
 
 ```
-node get-episodes.js release 2862
+node get-episodes.js <anime_id> <[asceding = true]> <Start_page> <End_Page>
 ```
 
 ### Step 2
