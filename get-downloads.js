@@ -1,11 +1,20 @@
 const fs = require("fs");
+const path = require("path");
 const puppeteer = require("puppeteer");
-const WRITESTREAM = fs.createWriteStream("download-links.txt", { flags: "wx" });
+
 const MAX_PAGE = 5;
 
-const START_INDEX = +process.argv[2] - 1;
-const END_INDEX = +process.argv[3];
+const FILE_PATH = path.join(path.resolve(), process.argv[2]);
+const WRITE_STREAM = fs.createWriteStream(
+  path.join(path.dirname(FILE_PATH), "download-links.txt"),
+  { flags: "wx" }
+);
+let START_INDEX = +process.argv[3] - 1;
+let END_INDEX = +process.argv[4];
 
+if (!fs.existsSync(FILE_PATH)) {
+  throw new Error(" Error with the episode link files");
+}
 if (
   isNaN(START_INDEX) ||
   isNaN(END_INDEX) ||
@@ -13,12 +22,17 @@ if (
   END_INDEX < START_INDEX ||
   END_INDEX <= 0
 ) {
-  throw new Error("Please specify both start and end index");
+  START_INDEX = 0;
+  END_INDEX = 1000;
+  console.log("Error with entered start index and end index");
+  console.log(
+    `Setting start Index ${START_INDEX} and end index to ${END_INDEX}`
+  );
 }
 
 (async () => {
   const links = fs
-    .readFileSync("episode-links.txt", "utf-8")
+    .readFileSync(FILE_PATH, "utf-8")
     .split("\n")
     .filter(Boolean)
     .reverse();
@@ -38,7 +52,7 @@ if (
       urls.push(...newUrls);
 
       for (url of newUrls) {
-        WRITESTREAM.write(url + "\n");
+        WRITE_STREAM.write(url + "\n");
       }
       console.log(urls.length, "number of urls fetched");
     }
@@ -46,7 +60,7 @@ if (
     console.log(err);
   }
   console.log("Total urls fetched", urls.length);
-  WRITESTREAM.end();
+  WRITE_STREAM.end();
   browser.close();
 })();
 

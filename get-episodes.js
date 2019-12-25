@@ -1,5 +1,6 @@
 const https = require("https");
 const fs = require("fs");
+const path = require("path");
 
 // const M = process.argv[2];
 const ANIME_ID = process.argv[2];
@@ -17,6 +18,7 @@ if (!ASC_SORT || !ANIME_ID) {
 const getUrls = url => {
   return new Promise((resolve, reject) => {
     https
+
       .request(url, res => {
         let responseData = "";
 
@@ -25,12 +27,14 @@ const getUrls = url => {
         res.on("end", () => {
           const { last_page, data } = JSON.parse(responseData);
           const urls = [];
+          const { anime_title } = data[0];
           data.forEach(({ id, anime_slug }) =>
             urls.push(`https://animepahe.com/anime/${anime_slug}/${id}`)
           );
           resolve({
             last_page,
-            urls
+            urls,
+            anime_title
           });
         });
       })
@@ -48,16 +52,22 @@ const apiURL = page =>
 (async () => {
   let currentPage = PAGE_START;
   let lastPage;
+  let name;
   const episodePageURLs = [];
   do {
-    const { last_page, urls } = await getUrls(apiURL(currentPage));
+    const { last_page, urls, anime_title } = await getUrls(apiURL(currentPage));
+    name = anime_title;
     lastPage = PAGE_END ? PAGE_END : last_page;
     currentPage++;
     console.log(`${urls.length} urls fetched`);
     episodePageURLs.push(...urls);
   } while (currentPage <= lastPage);
 
-  const stream = fs.createWriteStream("episode-links.txt", { flags: "wx" });
+  const dirPath = path.join(path.resolve("reward", name));
+  fs.mkdirSync(dirPath);
+  const stream = fs.createWriteStream(path.join(dirPath, "episode-links.txt"), {
+    flags: "wx"
+  });
   for (url of episodePageURLs) {
     stream.write(url + "\n");
   }

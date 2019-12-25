@@ -1,11 +1,18 @@
 const fs = require("fs");
+const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
 const Multiprogress = require("multi-progress");
 const progressBars = new Multiprogress(process.stderr);
 
 const MAX_PARALLEL_DOWNLOADS = 5;
-const START_INDEX = +process.argv[2] - 1;
-const END_INDEX = +process.argv[3];
+const FILE_PATH = path.join(path.resolve(), process.argv[2]);
+const DIR_PATH = path.dirname(FILE_PATH);
+const START_INDEX = +process.argv[3] - 1;
+const END_INDEX = +process.argv[4];
+
+if (!fs.existsSync(FILE_PATH)) {
+  throw new Error(" Error with the download link files");
+}
 
 if (
   isNaN(START_INDEX) ||
@@ -19,7 +26,7 @@ if (
 
 (async () => {
   const links = fs
-    .readFileSync("download-links.txt", "utf-8")
+    .readFileSync(FILE_PATH, "utf-8")
     .split("\n")
     .filter(Boolean);
 
@@ -62,7 +69,7 @@ async function download(link) {
       })
       .outputOptions("-c copy")
       .outputOptions("-bsf:a aac_adtstoasc")
-      .output(`reward/${fileName}`)
+      .output(path.join(DIR_PATH, fileName))
       .run();
   });
 }
