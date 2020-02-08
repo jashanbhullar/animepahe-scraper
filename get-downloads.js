@@ -71,8 +71,9 @@ async function downloadLink(browser, link, index) {
   await page.setRequestInterception(true);
   let url;
   page.on("request", interceptedRequest => {
-    if (interceptedRequest.url().endsWith(".m3u8"))
+    if (interceptedRequest.url().includes(".m3u8")) {
       url = interceptedRequest.url();
+    }
     interceptedRequest.continue();
   });
   await page.screenshot({
@@ -82,7 +83,7 @@ async function downloadLink(browser, link, index) {
   await page.click("div.click-to-load");
   await page.waitFor(5000);
   await page.screenshot({
-    path: `${index}-screenshot-afterClickeds.png`,
+    path: `${index}-screenshot-afterClicked.png`,
     fullPage: true
   });
   if (!url) {
