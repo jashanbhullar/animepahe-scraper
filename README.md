@@ -1,3 +1,5 @@
+# Not working as of yet.
+
 ## AnimePahe Scraper
 
 A scraper to download anime from [animepahe.com](animepahe.com).
