@@ -4,11 +4,13 @@
 # -c copy -bsf:a aac_adtstoasc \
 # "Watch Boku no Hero Academia 4th Season - 64 Online.mp4"
 
+download() {
+    ffmpeg -headers "referer: https://kwik.cx/e/XLMiKAAhJSBc" -i "$1" -c copy -bsf:a aac_adtstoasc "$2" < /dev/null
+}
 
 while read -r line; do
     video=($line)
     name=${video[0]}
     url=${video[1]}
-    ffmpeg -headers "referer: https://kwik.cx/e/XLMiKAAhJSBc" -i "${url}" -c copy -bsf:a aac_adtstoasc "${name}" < /dev/null
-    break
+    download $url $name &
 done < "$1"
