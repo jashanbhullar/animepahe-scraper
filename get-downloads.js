@@ -51,8 +51,8 @@ if (
       );
       urls.push(...newUrls);
 
-      for (url of newUrls) {
-        WRITE_STREAM.write(url + "\n");
+      for (const { url, name } of newUrls) {
+        WRITE_STREAM.write(name + " " + url + "\n");
       }
       console.log(urls.length, "number of urls fetched");
     }
@@ -89,6 +89,16 @@ async function downloadLink(browser, link, index) {
   if (!url) {
     throw new Error(`${index} No url found, took too much time executing`);
   }
+  const name = await page.evaluate(() =>
+    document
+      .getElementsByTagName("h1")[0]
+      .innerText.toString()
+      .replace(/\n/g, " ")
+  );
   await page.close();
-  return url;
+
+  return {
+    name,
+    url
+  };
 }
