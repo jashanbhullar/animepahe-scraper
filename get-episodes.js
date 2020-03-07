@@ -64,7 +64,7 @@ const apiURL = page =>
   } while (currentPage <= lastPage);
 
   const dirPath = path.join(path.resolve("reward", name));
-  fs.mkdirSync(dirPath);
+  fs.mkdirSync(dirPath, { recursive: true });
   const stream = fs.createWriteStream(path.join(dirPath, "episode-links.txt"), {
     flags: "wx"
   });
