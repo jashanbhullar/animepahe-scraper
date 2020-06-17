@@ -28,9 +28,11 @@ const getUrls = url => {
           const { last_page, data } = JSON.parse(responseData);
           const urls = [];
           const { anime_title } = data[0];
-          data.forEach(({ id, anime_slug }) =>
-            urls.push(`https://animepahe.com/anime/${anime_slug}/${id}`)
-          );
+          data.forEach(({ session, anime_slug, filler }) => {
+            if (!filler) {
+              urls.push(`https://animepahe.com/play/${anime_slug}/${session}`);
+            }
+          });
           resolve({
             last_page,
             urls,
@@ -56,7 +58,7 @@ const apiURL = page =>
   const episodePageURLs = [];
   do {
     const { last_page, urls, anime_title } = await getUrls(apiURL(currentPage));
-    name = anime_title;
+    name = anime_title || "NA";
     lastPage = PAGE_END ? PAGE_END : last_page;
     currentPage++;
     console.log(`${urls.length} urls fetched`);

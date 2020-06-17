@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "fluent-ffmpeg": "^2.1.2",
+    "m3u8stream": "^0.6.5",
     "multi-progress": "^2.0.0",
     "puppeteer": "^1.15.0"
   },

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 
-const MAX_PAGE = 5;
+const MAX_PAGE = 10;
 
 const FILE_PATH = path.join(path.resolve(), process.argv[2]);
 const WRITE_STREAM = fs.createWriteStream(
@@ -89,12 +89,15 @@ async function downloadLink(browser, link, index) {
   if (!url) {
     throw new Error(`${index} No url found, took too much time executing`);
   }
-  const name = await page.evaluate(() =>
-    document
-      .getElementsByTagName("h1")[0]
-      .innerText.toString()
-      .replace(/\n/g, " ")
-  );
+  const name =
+    (await page.evaluate(() =>
+      document
+        .getElementsByTagName("h1")[0]
+        .innerText.toString()
+        .replace(/\n/g, " ")
+        .replace(/\s/g, "-")
+        .replace(/\:/g, "-")
+    )) + ".mp4";
   await page.close();
 
   return {
