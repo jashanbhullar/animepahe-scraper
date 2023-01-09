@@ -52,7 +52,8 @@ if (
       urls.push(...newUrls);
 
       for (const { url, name } of newUrls) {
-        WRITE_STREAM.write(name + " " + url + "\n");
+        filename = path.join(path.dirname(FILE_PATH), name) + ".mp4";
+        WRITE_STREAM.write(filename + " " + url + "\n");
       }
       console.log(urls.length, "number of urls fetched");
     }
@@ -70,7 +71,7 @@ async function downloadLink(browser, link, index) {
   await page.goto(link);
   await page.setRequestInterception(true);
   let url;
-  page.on("request", interceptedRequest => {
+  page.on("request", (interceptedRequest) => {
     if (interceptedRequest.url().includes(".m3u8")) {
       url = interceptedRequest.url();
     }
@@ -78,13 +79,13 @@ async function downloadLink(browser, link, index) {
   });
   await page.screenshot({
     path: `${index}-screenshot-intial.png`,
-    fullPage: true
+    fullPage: true,
   });
   await page.click("div.click-to-load");
-  await page.waitFor(5000);
+  await page.waitForTimeout(20000);
   await page.screenshot({
     path: `${index}-screenshot-afterClicked.png`,
-    fullPage: true
+    fullPage: true,
   });
   if (!url) {
     throw new Error(`${index} No url found, took too much time executing`);
@@ -94,11 +95,12 @@ async function downloadLink(browser, link, index) {
       .getElementsByTagName("h1")[0]
       .innerText.toString()
       .replace(/\n/g, " ")
+      .replace(/\s/g, "_")
   );
   await page.close();
 
   return {
     name,
-    url
+    url,
   };
 }

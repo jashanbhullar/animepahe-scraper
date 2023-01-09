@@ -4,73 +4,111 @@ const path = require("path");
 
 // const M = process.argv[2];
 const ANIME_ID = process.argv[2];
-const ASC_SORT = process.argv[3] === "true" ? "episode_asc" : "episode_desc";
-const PAGE_START = +process.argv[4] || 1;
-const PAGE_END = +process.argv[5] || null;
+const NAME = process.argv[3];
+const FROM_EPISODE = +process.argv[4] || 1;
+const TO_EPISODE = +process.argv[5] || Number.MAX_SAFE_INTEGER;
 
-// Throw error if the required parameters are missing
-if (!ASC_SORT || !ANIME_ID) {
-  throw new Error("Please provide release status and anime id");
-}
+(() => {
+  error = false;
+  if (FROM_EPISODE < 0) {
+    console.log("FROM_EPSIODE has to be greater than 0");
+    error = true;
+  } else if (TO_EPISODE && TO_EPISODE < FROM_EPISODE) {
+    console.log("TO_EPISODE can't be greater than FROM_EPISODE");
+    error = true;
+  }
+
+  if (error) {
+    console.log("Will now exit!!!");
+    process.exit(0);
+  }
+})();
 
 // The promise which make the api request to the server
 // No Library used here :)
-const getUrls = url => {
+const getUrls = (url) => {
   return new Promise((resolve, reject) => {
     https
 
-      .request(url, res => {
+      .request(url, (res) => {
         let responseData = "";
 
-        res.on("data", d => (responseData += d));
+        res.on("data", (d) => (responseData += d));
 
         res.on("end", () => {
-          const { last_page, data } = JSON.parse(responseData);
-          const urls = [];
-          const { anime_title } = data[0];
-          data.forEach(({ id, anime_slug }) =>
-            urls.push(`https://animepahe.com/anime/${anime_slug}/${id}`)
-          );
+          const { next_page_url, data } = JSON.parse(responseData);
+
           resolve({
-            last_page,
-            urls,
-            anime_title
+            next_page_url,
+            episodes: data,
           });
         });
       })
-      .on("error", e => reject(e))
+      .on("error", (e) => reject(e))
       .end();
   });
 };
 
 // keep creating the next page of urls
-const apiURL = page =>
-  `https://animepahe.com/api?m=release&id=${ANIME_ID}&sort=${ASC_SORT}&page=${page}`;
+const apiURL = (page) =>
+  `https://animepahe.com/api?m=release&sort=episode_desc&id=${ANIME_ID}&page=${page}`;
 
 // The actual function
 // Made IIFE so that can be run as async
 (async () => {
-  let currentPage = PAGE_START;
-  let lastPage;
-  let name;
-  const episodePageURLs = [];
-  do {
-    const { last_page, urls, anime_title } = await getUrls(apiURL(currentPage));
-    name = anime_title;
-    lastPage = PAGE_END ? PAGE_END : last_page;
-    currentPage++;
-    console.log(`${urls.length} urls fetched`);
-    episodePageURLs.push(...urls);
-  } while (currentPage <= lastPage);
+  const allEpisodes = [];
+  let currentPage = 1;
 
-  const dirPath = path.join(path.resolve("reward", name));
+  while (true) {
+    const { episodes, next_page_url } = await getUrls(apiURL(currentPage));
+
+    console.log(
+      "Page",
+      currentPage,
+      "Fetched",
+      episodes.length,
+      "episodes from",
+      episodes[0].episode,
+      "to",
+      episodes[29].episode
+    );
+
+    for (val of episodes) {
+      const { episode, session } = val;
+      if (episode >= FROM_EPISODE && episode <= TO_EPISODE) {
+        val.url = `https://animepahe.com/play/${ANIME_ID}/${session}`;
+        allEpisodes.push(val);
+      }
+    }
+
+    if (next_page_url == null) {
+      console.log("Reached the end of page.");
+      break;
+    }
+    if (episodes[29].episode < FROM_EPISODE) {
+      console.log("Reached the starting episode");
+      break;
+    }
+    currentPage++;
+  }
+
+  console.log(
+    "Total episodes fetched",
+    allEpisodes.length,
+    "from",
+    allEpisodes[0].episode,
+    "to",
+    allEpisodes[allEpisodes.length - 1].episode
+  );
+
+  const dirPath = path.join(path.resolve("reward", NAME));
   fs.mkdirSync(dirPath, { recursive: true });
   const stream = fs.createWriteStream(path.join(dirPath, "episode-links.txt"), {
-    flags: "wx"
+    flags: "wx",
   });
-  for (url of episodePageURLs) {
-    stream.write(url + "\n");
+  for (val of allEpisodes) {
+    stream.write(val.url + "\n");
   }
   stream.end();
-  console.log(`Total ${episodePageURLs.length} fetched and written to file`);
+  console.log(`Total ${allEpisodes.length} fetched and written to file`);
 })();
